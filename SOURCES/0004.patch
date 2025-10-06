@@ -1,0 +1,1533 @@
+From d058872219e8fad3183d2bc91a81c9a8c761a653 Mon Sep 17 00:00:00 2001
+From: Lichen Liu <lichliu@redhat.com>
+Date: Tue, 7 May 2024 10:16:28 +0800
+Subject: [PATCH] Change kexec-tools to kdump-utils
+
+Done that by `find . -type f -exec sed -i 's/kexec-tools/kdump-utils/g'
+{} +`
+
+Signed-off-by: Lichen Liu <lichliu@redhat.com>
+---
+ com_redhat_kdump/constants.py            |  2 +-
+ com_redhat_kdump/gui/spokes/kdump.glade  |  2 +-
+ com_redhat_kdump/service/installation.py |  6 +++---
+ com_redhat_kdump/service/kdump.py        |  2 +-
+ com_redhat_kdump/tui/spokes/kdump.py     |  2 +-
+ po/ar.po                                 |  4 ++--
+ po/as.po                                 |  4 ++--
+ po/bg.po                                 |  4 ++--
+ po/bn_IN.po                              |  4 ++--
+ po/bs.po                                 |  4 ++--
+ po/ca.po                                 |  4 ++--
+ po/cs.po                                 |  8 ++++----
+ po/cy.po                                 |  4 ++--
+ po/da.po                                 |  4 ++--
+ po/de.po                                 |  4 ++--
+ po/el.po                                 |  4 ++--
+ po/en_GB.po                              |  4 ++--
+ po/es.po                                 |  4 ++--
+ po/et.po                                 |  4 ++--
+ po/fa.po                                 |  4 ++--
+ po/fi.po                                 |  4 ++--
+ po/fr.po                                 |  8 ++++----
+ po/gu.po                                 |  4 ++--
+ po/he.po                                 |  4 ++--
+ po/hi.po                                 |  4 ++--
+ po/hr.po                                 |  4 ++--
+ po/hu.po                                 |  4 ++--
+ po/id.po                                 |  4 ++--
+ po/is.po                                 |  6 +++---
+ po/it.po                                 |  4 ++--
+ po/ja.po                                 |  8 ++++----
+ po/ka.po                                 |  8 ++++----
+ po/kdump-anaconda-addon.pot              |  4 ++--
+ po/kn.po                                 |  4 ++--
+ po/ko.po                                 |  8 ++++----
+ po/lv.po                                 |  4 ++--
+ po/ml.po                                 |  4 ++--
+ po/mr.po                                 |  4 ++--
+ po/ms.po                                 |  4 ++--
+ po/nb.po                                 |  4 ++--
+ po/nl.po                                 |  4 ++--
+ po/or.po                                 |  4 ++--
+ po/pa.po                                 |  4 ++--
+ po/pl.po                                 |  4 ++--
+ po/pt.po                                 |  4 ++--
+ po/pt_BR.po                              |  6 +++---
+ po/ru.po                                 |  4 ++--
+ po/si.po                                 |  4 ++--
+ po/sk.po                                 |  4 ++--
+ po/sl.po                                 |  4 ++--
+ po/sq.po                                 |  4 ++--
+ po/sr.po                                 | 10 +++++-----
+ po/sr@Latn.po                            |  8 ++++----
+ po/sr@latin.po                           |  8 ++++----
+ po/sv.po                                 |  6 +++---
+ po/ta.po                                 |  4 ++--
+ po/ta_IN.po                              |  4 ++--
+ po/te.po                                 |  4 ++--
+ po/tr.po                                 |  4 ++--
+ po/uk.po                                 |  8 ++++----
+ po/vi.po                                 |  4 ++--
+ po/zh_CN.po                              |  8 ++++----
+ po/zh_TW.po                              |  4 ++--
+ 63 files changed, 147 insertions(+), 147 deletions(-)
+
+diff --git a/com_redhat_kdump/constants.py b/com_redhat_kdump/constants.py
+index 67980a2..81aea28 100644
+--- a/com_redhat_kdump/constants.py
++++ b/com_redhat_kdump/constants.py
+@@ -39,4 +39,4 @@ KDUMP = DBusServiceIdentifier(
+ 
+ # To mark ENCRYPTION_WARNING as translatable
+ _ = lambda x: x
+-ENCRYPTION_WARNING = _('Encrypted storage is in use, using an encrypted device as dump target for kdump might fail. Please verify if kdump is working properly after the installation finished. For more details see the "Notes on encrypted dump target" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt.')
++ENCRYPTION_WARNING = _('Encrypted storage is in use, using an encrypted device as dump target for kdump might fail. Please verify if kdump is working properly after the installation finished. For more details see the "Notes on encrypted dump target" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt.')
+diff --git a/com_redhat_kdump/gui/spokes/kdump.glade b/com_redhat_kdump/gui/spokes/kdump.glade
+index 67df028..9faff69 100644
+--- a/com_redhat_kdump/gui/spokes/kdump.glade
++++ b/com_redhat_kdump/gui/spokes/kdump.glade
+@@ -265,7 +265,7 @@
+                       <object class="GtkLabel" id="autoReservationWarning">
+                         <property name="can-focus">False</property>
+                         <property name="no-show-all">True</property>
+-                        <property name="label" translatable="yes">Automatic kdump memory reservation is in use. Kdump will use the default crashkernel value provided by the kexec-tools package. This is a best-effort support and might not fit your use case. It is recommended to verify if the crashkernel value is suitable after installation.</property>
++                        <property name="label" translatable="yes">Automatic kdump memory reservation is in use. Kdump will use the default crashkernel value provided by the kdump-utils package. This is a best-effort support and might not fit your use case. It is recommended to verify if the crashkernel value is suitable after installation.</property>
+                         <property name="wrap">True</property>
+                       </object>
+                       <packing>
+diff --git a/com_redhat_kdump/service/installation.py b/com_redhat_kdump/service/installation.py
+index 085dfa3..bb5bad2 100644
+--- a/com_redhat_kdump/service/installation.py
++++ b/com_redhat_kdump/service/installation.py
+@@ -62,8 +62,8 @@ class KdumpBootloaderConfigurationTask(Task):
+             ck_val = util.execWithCapture(**args)
+         except FileNotFoundError:
+             log.warning("Can't retrieve the default crashkernel value from "
+-                        "the installed kexec-tools, try to retrieve it from "
+-                        "the installer kexec-tools")
++                        "the installed kdump-utils, try to retrieve it from "
++                        "the installer kdump-utils")
+ 
+         if not ck_val:
+             del args['root']
+@@ -75,7 +75,7 @@ class KdumpBootloaderConfigurationTask(Task):
+                 ck_val = util.execWithCapture(**args)
+             except FileNotFoundError:
+                 log.warning("Can't retrieve the default crashkernel value "
+-                            "from installer kexec-tools either because it's "
++                            "from installer kdump-utils either because it's "
+                             "not installed")
+                 pass
+ 
+diff --git a/com_redhat_kdump/service/kdump.py b/com_redhat_kdump/service/kdump.py
+index eea56a5..8356d19 100755
+--- a/com_redhat_kdump/service/kdump.py
++++ b/com_redhat_kdump/service/kdump.py
+@@ -125,7 +125,7 @@ class KdumpService(KickstartService):
+         if self.kdump_enabled:
+             requirements.append(
+                 Requirement.for_package(
+-                    package_name="kexec-tools",
++                    package_name="kdump-utils",
+                     reason="Required by kdump add-on."
+                 )
+             )
+diff --git a/com_redhat_kdump/tui/spokes/kdump.py b/com_redhat_kdump/tui/spokes/kdump.py
+index 7150e9e..8b5dac6 100644
+--- a/com_redhat_kdump/tui/spokes/kdump.py
++++ b/com_redhat_kdump/tui/spokes/kdump.py
+@@ -114,7 +114,7 @@ class KdumpSpoke(NormalTUISpoke):
+                 message = TextWidget(_(
+                     "Automatic kdump memory reservation is in use. "
+                     "Kdump will use the default crashkernel value "
+-                    "provided by the kexec-tools package. This is a "
++                    "provided by the kdump-utils package. This is a "
+                     "best-effort support and might not fit "
+                     "your use case. It is recommended to verify "
+                     "if the crashkernel value is suitable after "
+diff --git a/po/ar.po b/po/ar.po
+index cb108ca..653f63b 100644
+--- a/po/ar.po
++++ b/po/ar.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/as.po b/po/as.po
+index 3efc5e7..bdb2aa5 100644
+--- a/po/as.po
++++ b/po/as.po
+@@ -24,7 +24,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -63,7 +63,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/bg.po b/po/bg.po
+index fabb86e..e263d41 100644
+--- a/po/bg.po
++++ b/po/bg.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/bn_IN.po b/po/bn_IN.po
+index 4e89173..f6b8f19 100644
+--- a/po/bn_IN.po
++++ b/po/bn_IN.po
+@@ -27,7 +27,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -66,7 +66,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/bs.po b/po/bs.po
+index c2c1c94..d33c339 100644
+--- a/po/bs.po
++++ b/po/bs.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ca.po b/po/ca.po
+index 4131333..26058c2 100644
+--- a/po/ca.po
++++ b/po/ca.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/cs.po b/po/cs.po
+index ed05a9a..3e63699 100644
+--- a/po/cs.po
++++ b/po/cs.po
+@@ -1,6 +1,6 @@
+-# Czech translation of kexec-tools.
++# Czech translation of kdump-utils.
+ # Copyright (C) 2007 FSF
+-# This file is distributed under the same license as the kexec-tools package.
++# This file is distributed under the same license as the kdump-utils package.
+ # Milan Kerslager <kerslage@linux.cz>, 2007.
+ msgid ""
+ msgstr ""
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/cy.po b/po/cy.po
+index 2a550f6..a21b1ff 100644
+--- a/po/cy.po
++++ b/po/cy.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/da.po b/po/da.po
+index ca2076a..a58f68d 100644
+--- a/po/da.po
++++ b/po/da.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/de.po b/po/de.po
+index c73235c..9a5fa6e 100644
+--- a/po/de.po
++++ b/po/de.po
+@@ -24,7 +24,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -63,7 +63,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/el.po b/po/el.po
+index 1c64a78..b972b72 100644
+--- a/po/el.po
++++ b/po/el.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/en_GB.po b/po/en_GB.po
+index fad8c62..d89fade 100644
+--- a/po/en_GB.po
++++ b/po/en_GB.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/es.po b/po/es.po
+index 51336da..255fba8 100644
+--- a/po/es.po
++++ b/po/es.po
+@@ -28,7 +28,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -67,7 +67,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/et.po b/po/et.po
+index 5fe6d37..18adb5c 100644
+--- a/po/et.po
++++ b/po/et.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/fa.po b/po/fa.po
+index bdf5204..299f56c 100644
+--- a/po/fa.po
++++ b/po/fa.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/fi.po b/po/fi.po
+index a54acb3..9c50337 100644
+--- a/po/fi.po
++++ b/po/fi.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/fr.po b/po/fr.po
+index 9830efc..49355ca 100644
+--- a/po/fr.po
++++ b/po/fr.po
+@@ -27,8 +27,8 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
+-msgstr "Le stockage crypté est en cours d'utilisation, l'utilisation d'un périphérique crypté comme cible de vidage pour kdump peut échouer. Veuillez vérifier si kdump fonctionne correctement une fois l'installation terminée. Pour plus de détails, consultez la section « Notes sur la cible de vidage chiffrée » dans /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
++msgstr "Le stockage crypté est en cours d'utilisation, l'utilisation d'un périphérique crypté comme cible de vidage pour kdump peut échouer. Veuillez vérifier si kdump fonctionne correctement une fois l'installation terminée. Pour plus de détails, consultez la section « Notes sur la cible de vidage chiffrée » dans /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+ #, python-format
+@@ -66,10 +66,10 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+-msgstr "La réservation automatique de mémoire kdump est en cours d’utilisation. Kdump utilisera la valeur de crashkernel par défaut fournie par le package kexec-tools. Il s’agit d’une prise en charge optimale et peut ne pas correspondre à votre cas d’utilisation. Il est recommandé de vérifier si la valeur du crashkernel est appropriée après l’installation."
++msgstr "La réservation automatique de mémoire kdump est en cours d’utilisation. Kdump utilisera la valeur de crashkernel par défaut fournie par le package kdump-utils. Il s’agit d’une prise en charge optimale et peut ne pas correspondre à votre cas d’utilisation. Il est recommandé de vérifier si la valeur du crashkernel est appropriée après l’installation."
+ 
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:132
+ msgid "Enable kdump"
+diff --git a/po/gu.po b/po/gu.po
+index e5370dc..009b3ba 100644
+--- a/po/gu.po
++++ b/po/gu.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/he.po b/po/he.po
+index 9a101a8..1358a7c 100644
+--- a/po/he.po
++++ b/po/he.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/hi.po b/po/hi.po
+index 1bdccfb..3873b7c 100644
+--- a/po/hi.po
++++ b/po/hi.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/hr.po b/po/hr.po
+index bdf574f..31aa1d6 100644
+--- a/po/hr.po
++++ b/po/hr.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/hu.po b/po/hu.po
+index 6dc9862..1d73c09 100644
+--- a/po/hu.po
++++ b/po/hu.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/id.po b/po/id.po
+index cbc3f2e..9ec0a44 100644
+--- a/po/id.po
++++ b/po/id.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/is.po b/po/is.po
+index 1ce8edb..f6d33a7 100644
+--- a/po/is.po
++++ b/po/is.po
+@@ -1,4 +1,4 @@
+-# Íslensk þýðing kexec-tools
++# Íslensk þýðing kdump-utils
+ # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+ # This file is distributed under the same license as the PACKAGE package.
+ # Richard Allen <ra@ra.is>, 2007.
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/it.po b/po/it.po
+index 6e8ee98..588860b 100644
+--- a/po/it.po
++++ b/po/it.po
+@@ -27,7 +27,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -66,7 +66,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ja.po b/po/ja.po
+index bd847fb..e017f70 100644
+--- a/po/ja.po
++++ b/po/ja.po
+@@ -28,8 +28,8 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
+-msgstr "暗号化されたストレージが使用中の場合は、kdump のダンプターゲット暗号化した kdump を使用すると失敗します。インストール完了後に kdump が正しく動作しているかどうかを確認してください。詳細は、/usr/share/doc/kexec-tools/kexec-kdump-howto.txt の Notes on encrypted dump target セクションを参照してください。"
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
++msgstr "暗号化されたストレージが使用中の場合は、kdump のダンプターゲット暗号化した kdump を使用すると失敗します。インストール完了後に kdump が正しく動作しているかどうかを確認してください。詳細は、/usr/share/doc/kdump-utils/kexec-kdump-howto.txt の Notes on encrypted dump target セクションを参照してください。"
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+ #, python-format
+@@ -67,10 +67,10 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+-msgstr "kdump メモリーの自動予約は使用中です。Kdump は、 kexec-tools パッケージが提供するデフォルトの crashkernel 値を使用します。これはベストエフォートで、ユースケースに適合しない可能性があります。インストール後に crashkernel の値が適切かどうかを確認することが推奨されます。"
++msgstr "kdump メモリーの自動予約は使用中です。Kdump は、 kdump-utils パッケージが提供するデフォルトの crashkernel 値を使用します。これはベストエフォートで、ユースケースに適合しない可能性があります。インストール後に crashkernel の値が適切かどうかを確認することが推奨されます。"
+ 
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:132
+ msgid "Enable kdump"
+diff --git a/po/ka.po b/po/ka.po
+index b5099f5..d0e1c44 100644
+--- a/po/ka.po
++++ b/po/ka.po
+@@ -22,12 +22,12 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ "გამოიყენება დაშიფრული საცავი. დამპისთვს დაშიფრული საცავის გამოყენების "
+ "მორგება საკმაოდ პრობლემატურია. დაყენების შემდეგ შეამოწმეთ, სწორად მუშაობს თუ "
+ "არა kdump. მეტი დეტალებისთვის იხილეთ სექცია \"შენიშვნები დაშიფრული "
+-"საცავისთვის\" ფაილში /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"საცავისთვის\" ფაილში /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+ #, python-format
+@@ -65,12 +65,12 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+ "გამოიყენება Kdump-ის მეხსიერების ავტომატური რეზერვაცია. Kdump გამოიყენებს "
+-"crashkernel-ის kexec-tools პაკეტში ჩაწერილ მნიშვნელობას. ეს ყველაზე ადვილი "
++"crashkernel-ის kdump-utils პაკეტში ჩაწერილ მნიშვნელობას. ეს ყველაზე ადვილი "
+ "მიდგომაა, რომელიც შეიძლება თქვენს შემთხვევას არ ერგებოდეს. გამოიყენება "
+ "დაყენების შემდეგ crashkernel-ის მნიშვნელობის ადეკვატურობის შესაფასებლად."
+ 
+diff --git a/po/kdump-anaconda-addon.pot b/po/kdump-anaconda-addon.pot
+index 5816a90..648282c 100644
+--- a/po/kdump-anaconda-addon.pot
++++ b/po/kdump-anaconda-addon.pot
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/kn.po b/po/kn.po
+index b9e8e34..7ffb7ca 100644
+--- a/po/kn.po
++++ b/po/kn.po
+@@ -25,7 +25,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -64,7 +64,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ko.po b/po/ko.po
+index 8a610cd..3211785 100644
+--- a/po/ko.po
++++ b/po/ko.po
+@@ -27,8 +27,8 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
+-msgstr "암호화된 스토리지가 사용 중이며 kdump의 덤프 대상으로 암호화된 장치를 사용하면 실패할 수 있습니다. 설치가 완료된 후 kdump가 제대로 작동하는지 확인하십시오. 자세한 내용은 /usr/share/doc/kexec-tools/kexec-kdump-howto.txt의 \"암호화된 덤프 대상에 대한 주의 사항\" 섹션을 참조하십시오."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
++msgstr "암호화된 스토리지가 사용 중이며 kdump의 덤프 대상으로 암호화된 장치를 사용하면 실패할 수 있습니다. 설치가 완료된 후 kdump가 제대로 작동하는지 확인하십시오. 자세한 내용은 /usr/share/doc/kdump-utils/kexec-kdump-howto.txt의 \"암호화된 덤프 대상에 대한 주의 사항\" 섹션을 참조하십시오."
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+ #, python-format
+@@ -66,10 +66,10 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+-msgstr "자동 kdump 메모리 예약이 사용 중입니다. Kdump는 kexec-tools 패키지에서 제공하는 기본 크래시커널 값을 사용합니다. 이는 사용 사례에 적합하지 않을 수 있으므로 설치 후 크래시커널 값을 확인하는 것이 좋습니다."
++msgstr "자동 kdump 메모리 예약이 사용 중입니다. Kdump는 kdump-utils 패키지에서 제공하는 기본 크래시커널 값을 사용합니다. 이는 사용 사례에 적합하지 않을 수 있으므로 설치 후 크래시커널 값을 확인하는 것이 좋습니다."
+ 
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:132
+ msgid "Enable kdump"
+diff --git a/po/lv.po b/po/lv.po
+index 6cd93d4..42414ae 100644
+--- a/po/lv.po
++++ b/po/lv.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ml.po b/po/ml.po
+index 5f536a0..258fc9b 100644
+--- a/po/ml.po
++++ b/po/ml.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/mr.po b/po/mr.po
+index 4d84d82..b722424 100644
+--- a/po/mr.po
++++ b/po/mr.po
+@@ -28,7 +28,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -67,7 +67,7 @@ msgstr "केडम्प"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ms.po b/po/ms.po
+index 208e106..35d82f7 100644
+--- a/po/ms.po
++++ b/po/ms.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/nb.po b/po/nb.po
+index 7864352..c8a33f2 100644
+--- a/po/nb.po
++++ b/po/nb.po
+@@ -21,7 +21,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -60,7 +60,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/nl.po b/po/nl.po
+index 38938f9..5806444 100644
+--- a/po/nl.po
++++ b/po/nl.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/or.po b/po/or.po
+index b50cca8..1602ba3 100644
+--- a/po/or.po
++++ b/po/or.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/pa.po b/po/pa.po
+index b59b957..33870bd 100644
+--- a/po/pa.po
++++ b/po/pa.po
+@@ -25,7 +25,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -64,7 +64,7 @@ msgstr "ਕੇ-ਡੰਪ"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/pl.po b/po/pl.po
+index e4c9996..c87756d 100644
+--- a/po/pl.po
++++ b/po/pl.po
+@@ -21,7 +21,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -60,7 +60,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/pt.po b/po/pt.po
+index 27fa8cf..c4514f6 100644
+--- a/po/pt.po
++++ b/po/pt.po
+@@ -17,7 +17,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -56,7 +56,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/pt_BR.po b/po/pt_BR.po
+index 72c3721..3708007 100644
+--- a/po/pt_BR.po
++++ b/po/pt_BR.po
+@@ -1,5 +1,5 @@
+ # translation of pt_BR.po to Brazilian Portuguese
+-# This file is distributed under the same license as the kexec-tools package.
++# This file is distributed under the same license as the kdump-utils package.
+ # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER.
+ # Valnir Ferreira Jr., 2007.
+ # Igor Pires Soares <igor@projetofedora.org>, 2007.
+@@ -29,7 +29,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -68,7 +68,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ru.po b/po/ru.po
+index 736dc05..2672167 100644
+--- a/po/ru.po
++++ b/po/ru.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/si.po b/po/si.po
+index 56915e6..0c1ca09 100644
+--- a/po/si.po
++++ b/po/si.po
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "කේඩම්ප්"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sk.po b/po/sk.po
+index 7b94121..53494e6 100644
+--- a/po/sk.po
++++ b/po/sk.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sl.po b/po/sl.po
+index 3af751f..fbf76f0 100644
+--- a/po/sl.po
++++ b/po/sl.po
+@@ -24,7 +24,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -63,7 +63,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sq.po b/po/sq.po
+index 81c6db5..ff8dd51 100644
+--- a/po/sq.po
++++ b/po/sq.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sr.po b/po/sr.po
+index 11dec31..317eb84 100644
+--- a/po/sr.po
++++ b/po/sr.po
+@@ -1,11 +1,11 @@
+-# Serbian translations for kexec-tools
++# Serbian translations for kdump-utils
+ # Copyright (C) 2007 Red Hat, Inc.
+-# This file is distributed under the same license as the kexec-tools package.
++# This file is distributed under the same license as the kdump-utils package.
+ # Miloš Komarčević <kmilos@gmail.com>, 2007.
+ #
+ msgid ""
+ msgstr ""
+-"Project-Id-Version: kexec-tools\n"
++"Project-Id-Version: kdump-utils\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2022-01-13 18:03+0800\n"
+ "PO-Revision-Date: 2007-03-11 01:02-0000\n"
+@@ -21,7 +21,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -60,7 +60,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sr@Latn.po b/po/sr@Latn.po
+index 80d3ba7..42053e9 100644
+--- a/po/sr@Latn.po
++++ b/po/sr@Latn.po
+@@ -1,6 +1,6 @@
+-# Serbian(Latin) translations for kexec-tools
++# Serbian(Latin) translations for kdump-utils
+ # Copyright (C) 2007 Red Hat, Inc.
+-# This file is distributed under the same license as the kexec-tools package.
++# This file is distributed under the same license as the kdump-utils package.
+ # Miloš Komarčević <kmilos@gmail.com>, 2007.
+ msgid ""
+ msgstr ""
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sr@latin.po b/po/sr@latin.po
+index 80d3ba7..42053e9 100644
+--- a/po/sr@latin.po
++++ b/po/sr@latin.po
+@@ -1,6 +1,6 @@
+-# Serbian(Latin) translations for kexec-tools
++# Serbian(Latin) translations for kdump-utils
+ # Copyright (C) 2007 Red Hat, Inc.
+-# This file is distributed under the same license as the kexec-tools package.
++# This file is distributed under the same license as the kdump-utils package.
+ # Miloš Komarčević <kmilos@gmail.com>, 2007.
+ msgid ""
+ msgstr ""
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/sv.po b/po/sv.po
+index 2213318..fca5b6e 100644
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -1,4 +1,4 @@
+-# Svenska translation of kexec-tools.
++# Svenska translation of kdump-utils.
+ # Copyright (C) 2006 Free Software Foundation, Inc.
+ # Magnus Larsson <fedoratrans@gmail.com>, 2007.
+ msgid ""
+@@ -21,7 +21,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -60,7 +60,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ta.po b/po/ta.po
+index c6a2b59..085264b 100644
+--- a/po/ta.po
++++ b/po/ta.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/ta_IN.po b/po/ta_IN.po
+index c65b525..73aec2b 100644
+--- a/po/ta_IN.po
++++ b/po/ta_IN.po
+@@ -19,7 +19,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -58,7 +58,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/te.po b/po/te.po
+index cc84cca..5c42b3a 100644
+--- a/po/te.po
++++ b/po/te.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/tr.po b/po/tr.po
+index 1976e6b..98b8fea 100644
+--- a/po/tr.po
++++ b/po/tr.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/uk.po b/po/uk.po
+index 27b0774..f186a4c 100644
+--- a/po/uk.po
++++ b/po/uk.po
+@@ -1,6 +1,6 @@
+-# Ukrainian translation to kexec-tools.
++# Ukrainian translation to kdump-utils.
+ # Copyright (C) Free Software Foundation
+-# This file is distributed under the same license as the kexec-tools package.
++# This file is distributed under the same license as the kdump-utils package.
+ # Maxim Dziumanenko <dziumanenko@gmail.com>, 2007.
+ msgid ""
+ msgstr ""
+@@ -23,7 +23,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -62,7 +62,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/vi.po b/po/vi.po
+index a9711f0..ba2baa7 100644
+--- a/po/vi.po
++++ b/po/vi.po
+@@ -22,7 +22,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -61,7 +61,7 @@ msgstr ""
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+diff --git a/po/zh_CN.po b/po/zh_CN.po
+index 5681c42..f6e3008 100644
+--- a/po/zh_CN.po
++++ b/po/zh_CN.po
+@@ -26,8 +26,8 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
+-msgstr "使用加密存储，为 kdump 使用加密设备作为转储目标可能会失败。请在安装完成后验证 kdump 是否正常工作。如需了解更多详细信息，请参阅 /usr/share/doc/kexec-tools/kexec-kdump-howto.txt 中的 \"Notes on encrypted dump target\" 部分。"
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
++msgstr "使用加密存储，为 kdump 使用加密设备作为转储目标可能会失败。请在安装完成后验证 kdump 是否正常工作。如需了解更多详细信息，请参阅 /usr/share/doc/kdump-utils/kexec-kdump-howto.txt 中的 \"Notes on encrypted dump target\" 部分。"
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+ #, python-format
+@@ -65,10 +65,10 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+-msgstr "自动 kdump 内存保留在使用。Kdump 将使用 kexec-tools 软件包提供的默认 crashkernel 值。这是最好的支持，可能不适合您的用例。建议在安装后验证 crashkernel 值是否合适。"
++msgstr "自动 kdump 内存保留在使用。Kdump 将使用 kdump-utils 软件包提供的默认 crashkernel 值。这是最好的支持，可能不适合您的用例。建议在安装后验证 crashkernel 值是否合适。"
+ 
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:132
+ msgid "Enable kdump"
+diff --git a/po/zh_TW.po b/po/zh_TW.po
+index 3060cbe..336db1a 100644
+--- a/po/zh_TW.po
++++ b/po/zh_TW.po
+@@ -26,7 +26,7 @@ msgid ""
+ "Encrypted storage is in use, using an encrypted device as dump target for "
+ "kdump might fail. Please verify if kdump is working properly after the "
+ "installation finished. For more details see the \"Notes on encrypted dump "
+-"target\" section in /usr/share/doc/kexec-tools/kexec-kdump-howto.txt."
++"target\" section in /usr/share/doc/kdump-utils/kexec-kdump-howto.txt."
+ msgstr ""
+ 
+ #: ../com_redhat_kdump/service/kickstart.py:103
+@@ -65,7 +65,7 @@ msgstr "Kdump"
+ #: ../com_redhat_kdump/tui/spokes/kdump.py:115 tmp/kdump.glade.h:11
+ msgid ""
+ "Automatic kdump memory reservation is in use. Kdump will use the default "
+-"crashkernel value provided by the kexec-tools package. This is a best-effort "
++"crashkernel value provided by the kdump-utils package. This is a best-effort "
+ "support and might not fit your use case. It is recommended to verify if the "
+ "crashkernel value is suitable after installation."
+ msgstr ""
+-- 
+2.44.0
+
