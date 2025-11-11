@@ -4,7 +4,7 @@
 
 Name: kdump-anaconda-addon
 Version: 006
-Release: 13.%{snapshotdate}git%{gitshortcommit}%{?dist}
+Release: 15.%{snapshotdate}git%{gitshortcommit}%{?dist}
 Url: https://github.com/daveyoung/kdump-anaconda-addon
 License: GPLv2
 Summary: Kdump configuration anaconda addon
@@ -21,6 +21,8 @@ Source0: https://github.com/daveyoung/kdump-anaconda-addon/archive/%{gitcommit}/
 
 Patch1: 0001.patch
 Patch2: 0002.patch
+Patch3: 0003.patch
+Patch4: 0004.patch
 
 %description
 Kdump anaconda addon
@@ -44,13 +46,19 @@ Kdump anaconda addon
 %{_datadir}/icons/hicolor/scalable/apps/kdump.svg
 
 %changelog
-* Thu Jan 20 2022 Coiby <coxu@redhat.com> - 006-1.20220128git9603258
+* Tue Apr 29 2025 Coiby Xu <coxu@redhat.com> - 006-15.20220128git9603258
+- Handle the case where systemd isn't installed (RHEL-86873)
+
+* Tue Mar 25 2025 Coiby Xu <coxu@redhat.com> - 006-14.20220128git9603258
+- Disable kdump.service explicitly if users request to (RHEL-41082)
+
+* Thu Jan 20 2022 Coiby <coxu@redhat.com> - 006-13.20220128git9603258
 - Update to latest git snapshot (20220128). Resolves: bz2046612
 
-* Thu Jan 20 2022 Coiby <coxu@redhat.com> - 006-1.20220120git44fe737
+* Thu Jan 20 2022 Coiby <coxu@redhat.com> - 006-12.20220120git44fe737
 - Update to latest git snapshot (20220120). Resolves: bz2003131
 
-* Thu Jan 13 2022 Coiby <coxu@redhat.com> - 006-1.20220113git4c5a91d
+* Thu Jan 13 2022 Coiby <coxu@redhat.com> - 006-11.20220113git4c5a91d
 - Update to latest git snapshot (20220113). Resolves: bz2034491
 
 * Thu Oct 14 2021 Kairui Song <kasong@redhat.com> - 006-10.20211014git641a7b7
