@@ -4,7 +4,7 @@
 
 Name: kdump-anaconda-addon
 Version: 006
-Release: 17.%{snapshotdate}git%{gitshortcommit}%{?dist}
+Release: 19.%{snapshotdate}git%{gitshortcommit}%{?dist}
 Url: https://github.com/rhinstaller/kdump-anaconda-addon
 License: GPL-2.0-only
 Summary: Kdump configuration anaconda addon
@@ -23,6 +23,8 @@ Patch1: 0001.patch
 Patch2: 0002.patch
 Patch3: 0003.patch
 Patch4: 0004.patch
+Patch5: 0005.patch
+Patch6: 0006.patch
 
 %description
 Kdump anaconda addon
@@ -46,6 +48,12 @@ Kdump anaconda addon
 %{_datadir}/icons/hicolor/scalable/apps/kdump.svg
 
 %changelog
+* Tue Apr 29 2025 Coiby Xu <coxu@redhat.com> - 006-19.20220714git7ca2d3e
+- Handle the case where systemd isn't installed (RHEL-87148)
+
+* Tue Mar 25 2025 Coiby Xu <coxu@redhat.com> - 006-18.20220714git7ca2d3e
+- Disable kdump.service explicitly if users request to (RHEL-84190)
+
 * Tue Oct 29 2024 Troy Dawson <tdawson@redhat.com> - 006-17.20220714git7ca2d3e
 - Bump release for October 2024 mass rebuild:
   Resolves: RHEL-64018

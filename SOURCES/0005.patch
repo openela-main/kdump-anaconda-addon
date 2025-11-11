@@ -1,0 +1,58 @@
+From 1434290fa4b5cfdf4aeb944df17b2221954bb722 Mon Sep 17 00:00:00 2001
+From: Coiby Xu <coiby.xu@gmail.com>
+Date: Wed, 19 Mar 2025 17:10:46 +0800
+Subject: [PATCH] Disable kdump.service explicitly if users request to
+
+Resolves: https://issues.redhat.com/browse/RHEL-41082
+
+Currently, kdump.service isn't disabled even users request to. This
+happens because RHEL/CentOS systemd presets have kdump.service enabled.
+So explicitly disable kdump.service to address this case.
+
+Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+---
+ com_redhat_kdump/service/installation.py | 7 ++++---
+ test/unit_tests/test_installation.py     | 6 +++++-
+ 2 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/com_redhat_kdump/service/installation.py b/com_redhat_kdump/service/installation.py
+index bb5bad2..5c5d9c2 100644
+--- a/com_redhat_kdump/service/installation.py
++++ b/com_redhat_kdump/service/installation.py
+@@ -138,12 +138,13 @@ class KdumpInstallationTask(Task):
+ 
+     def run(self):
+         """Run the task."""
++        systemctl_action = "enable"
+         if not self._kdump_enabled:
+-            log.debug("Kdump is disabled. Skipping.")
+-            return
++            log.debug("kdump.serivce will be disabled.")
++            systemctl_action = "disable"
+ 
+         util.execWithRedirect(
+             "systemctl",
+-            ["enable", "kdump.service"],
++            [systemctl_action, "kdump.service"],
+             root=self._sysroot
+         )
+diff --git a/test/unit_tests/test_installation.py b/test/unit_tests/test_installation.py
+index f100dda..e1234be 100644
+--- a/test/unit_tests/test_installation.py
++++ b/test/unit_tests/test_installation.py
+@@ -187,7 +187,11 @@ class KdumpInstallationTestCase(TestCase):
+             kdump_enabled=False
+         )
+         task.run()
+-        mock_util.execWithRedirect.assert_not_called()
++        mock_util.execWithRedirect.assert_called_once_with(
++            "systemctl",
++            ["disable", "kdump.service"],
++            root="/mnt/sysroot"
++        )
+ 
+     @patch("com_redhat_kdump.service.installation.util")
+     def test_installation_kdump_enabled(self, mock_util):
+-- 
+2.48.1
+
