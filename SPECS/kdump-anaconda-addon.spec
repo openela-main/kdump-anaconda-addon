@@ -4,7 +4,7 @@
 
 Name: kdump-anaconda-addon
 Version: 006
-Release: 19.%{snapshotdate}git%{gitshortcommit}%{?dist}
+Release: 20.%{snapshotdate}git%{gitshortcommit}%{?dist}
 Url: https://github.com/rhinstaller/kdump-anaconda-addon
 License: GPL-2.0-only
 Summary: Kdump configuration anaconda addon
@@ -25,6 +25,9 @@ Patch3: 0003.patch
 Patch4: 0004.patch
 Patch5: 0005.patch
 Patch6: 0006.patch
+Patch7: 0007.patch
+Patch8: 0008.patch
+Patch9: 0009.patch
 
 %description
 Kdump anaconda addon
@@ -48,6 +51,9 @@ Kdump anaconda addon
 %{_datadir}/icons/hicolor/scalable/apps/kdump.svg
 
 %changelog
+* Thu Sep 25 2025 Coiby Xu <coxu@redhat.com> - 006-20.20220714git7ca2d3e
+- Feature: Set up crypttab for encrypted dump target
+
 * Tue Apr 29 2025 Coiby Xu <coxu@redhat.com> - 006-19.20220714git7ca2d3e
 - Handle the case where systemd isn't installed (RHEL-87148)
 

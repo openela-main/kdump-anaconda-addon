@@ -1,0 +1,64 @@
+From: Coiby Xu <coiby.xu@gmail.com>
+
+Subject: Don't emit ENCRYPTION_WARNING for x86_64
+
+Resolves: https://issues.redhat.com/browse/RHEL-29039
+Conflict: None
+
+commit a6c2cf4313e937e1ff43d6907c9df445f982e0ef
+Author: Coiby Xu <coiby.xu@gmail.com>
+Date:   Wed Sep 17 09:43:55 2025 +0800
+
+    Don't emit ENCRYPTION_WARNING for x86_64
+    
+    Resolves: https://issues.redhat.com/browse/RHEL-29039
+    
+    x86_64 now supports encrypted dump target. There is no need for this
+    warning.
+    
+    Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+
+Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+
+diff --git a/com_redhat_kdump/gui/spokes/kdump.py b/com_redhat_kdump/gui/spokes/kdump.py
+index c313f43479142d23c94e74bc329d8f3af70dc0c4..1339cff1713a23136ec8382dd702309ba6af55b0 100644
+--- a/com_redhat_kdump/gui/spokes/kdump.py
++++ b/com_redhat_kdump/gui/spokes/kdump.py
+@@ -31,6 +31,7 @@ from pyanaconda.ui.categories.system import SystemCategory
+ from pyanaconda.ui.gui.spokes import NormalSpoke
+ from pyanaconda.ui.gui.utils import fancy_set_sensitive
+ from pyanaconda.ui.communication import hubQ
++import blivet.arch
+ 
+ from com_redhat_kdump.i18n import _, N_
+ from com_redhat_kdump.constants import FADUMP_CAPABLE_FILE, KDUMP, ENCRYPTION_WARNING
+@@ -135,7 +136,7 @@ class KdumpSpoke(NormalSpoke):
+         self._enableButton.emit("toggled")
+ 
+         self.clear_info()
+-        if self._luks_devs:
++        if self._luks_devs and blivet.arch.get_arch() != "x86_64":
+             self.set_warning(_(ENCRYPTION_WARNING))
+ 
+     def apply(self):
+diff --git a/com_redhat_kdump/service/kdump.py b/com_redhat_kdump/service/kdump.py
+index cecbfc3ec6ae34ab9602809091398b3f64917589..33d329089fb4e6ea76947f90815bd01ea25c8980 100755
+--- a/com_redhat_kdump/service/kdump.py
++++ b/com_redhat_kdump/service/kdump.py
+@@ -29,6 +29,7 @@ from com_redhat_kdump.constants import KDUMP
+ from com_redhat_kdump.service.installation import KdumpBootloaderConfigurationTask, KdumpInstallationTask, KdumpCrypttabSetupTask
+ from com_redhat_kdump.service.kdump_interface import KdumpInterface
+ from com_redhat_kdump.service.kickstart import KdumpKickstartSpecification
++import blivet.arch
+ 
+ log = logging.getLogger(__name__)
+ 
+@@ -144,7 +145,7 @@ class KdumpService(KickstartService):
+             )
+         ]
+ 
+-        if self.kdump_enabled:
++        if self.kdump_enabled and blivet.arch.get_arch() == "x86_64":
+             tasks.append(
+                 KdumpCrypttabSetupTask(
+                     sysroot=conf.target.system_root

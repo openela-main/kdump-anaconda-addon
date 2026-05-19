@@ -1,0 +1,84 @@
+From: Coiby Xu <coiby.xu@gmail.com>
+
+Subject: Check /usr/bin/systemctl instead of /systemctl
+
+Relates: https://issues.redhat.com/browse/RHEL-29039
+Conflict: None
+
+commit 067afd2904bb77d3f87b241506216eae98e111c0
+Author: Coiby Xu <coiby.xu@gmail.com>
+Date:   Wed Aug 13 12:06:33 2025 +0800
+
+    Check /usr/bin/systemctl instead of /systemctl
+    
+    The early patch checks sysroot/systemctl by mistake. Fix it.
+    
+    Fixes: 25c549c ("Handle the case where systemd isn't installed")
+    Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+
+Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+
+diff --git a/com_redhat_kdump/service/installation.py b/com_redhat_kdump/service/installation.py
+index 1e0096aa5edb6c054228ff9eec9cc528731c7ed3..aae58c173cc4e879a2ff772417eb17fd8ca29864 100644
+--- a/com_redhat_kdump/service/installation.py
++++ b/com_redhat_kdump/service/installation.py
+@@ -17,7 +17,6 @@
+ #
+ import logging
+ import os
+-import shutil
+ 
+ from pyanaconda.core import util
+ from pyanaconda.modules.common.constants.objects import BOOTLOADER
+@@ -143,7 +142,7 @@ class KdumpInstallationTask(Task):
+         # Anaconda may be used to create minimal container image which doesn't
+         # have systemd installed
+         # https://issues.redhat.com/browse/RHEL-41082?focusedId=26969576&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-26969576
+-        if not shutil.which(self._sysroot + "/systemctl"):
++        if not os.path.exists(self._sysroot + "/usr/bin/systemctl"):
+             log.debug("systemd not installed, skip KdumpInstallationTask")
+             return
+ 
+diff --git a/test/unit_tests/test_installation.py b/test/unit_tests/test_installation.py
+index 43f51669303c147d6528728f26a4d8ffca2a103a..e0d4109ad2fd9996c62a7c746e558fc09f1f5315 100644
+--- a/test/unit_tests/test_installation.py
++++ b/test/unit_tests/test_installation.py
+@@ -181,9 +181,9 @@ class KdumpInstallationTestCase(TestCase):
+         assert mock_exec.call_count == 2
+ 
+     @patch("com_redhat_kdump.service.installation.util")
+-    @patch("shutil.which")
+-    def test_installation_kdump_disabled(self, mock_shutil, mock_util):
+-        mock_shutil.return_value = True
++    @patch("os.path.exists")
++    def test_installation_kdump_disabled(self, mock_os_path, mock_util):
++        mock_os_path.return_value = True
+         task = KdumpInstallationTask(
+             sysroot="/mnt/sysroot",
+             kdump_enabled=False
+@@ -196,9 +196,9 @@ class KdumpInstallationTestCase(TestCase):
+         )
+ 
+     @patch("com_redhat_kdump.service.installation.util")
+-    @patch("shutil.which")
+-    def test_installation_kdump_enabled(self, mock_shutil, mock_util):
+-        mock_shutil.return_value = True
++    @patch("os.path.exists")
++    def test_installation_kdump_enabled(self, mock_os_path, mock_util):
++        mock_os_path.return_value = True
+         task = KdumpInstallationTask(
+             sysroot="/mnt/sysroot",
+             kdump_enabled=True
+@@ -211,9 +211,9 @@ class KdumpInstallationTestCase(TestCase):
+         )
+ 
+     @patch("com_redhat_kdump.service.installation.util")
+-    @patch("shutil.which")
+-    def test_installation_kdump_disable_no_systemctl(self, mock_shutil, mock_util):
+-        mock_shutil.return_value = False
++    @patch("os.path.exists")
++    def test_installation_kdump_disable_no_systemctl(self, mock_os_path, mock_util):
++        mock_os_path.return_value = False
+         task = KdumpInstallationTask(
+             sysroot="/mnt/sysroot",
+             kdump_enabled=False

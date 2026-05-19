@@ -1,0 +1,202 @@
+From: Coiby Xu <coiby.xu@gmail.com>
+
+Subject: Call kdumpctl setup-crypttab so kdump will work on boot for encrypted dump target
+
+Resolves: https://issues.redhat.com/browse/RHEL-29039
+Conflict: None
+
+commit 181815c59574005582e4ff769e50638f4a0e0214
+Author: Coiby Xu <coiby.xu@gmail.com>
+Date:   Wed Sep 17 14:59:29 2025 +0800
+
+    Call kdumpctl setup-crypttab so kdump will work on boot for encrypted dump target
+    
+    Resolves: https://issues.redhat.com/browse/RHEL-29039
+    
+    Call "kdumpctl setup-crypttab" to set up /etc/crypttab so the volume
+    keys can be passed to the crash kernel.
+    
+    Note Anaconda writes to /etc/crypttab at "Early storage configuration"
+    phase. So we set up /etc/crypttab at "Anaconda addon configuration"
+    phase which happens before Anaconda generates initramfs. So the updated
+    crypttab will be built into the initramfs.
+    
+        01:52:19,877 INF installation: Queue started: Early storage configuration (3/18)
+        ...
+        ...
+        01:56:17,041 INF installation: Queue started: Anaconda addon configuration (15/18)
+        01:56:17,044 INF installation: Queue started: Initramfs generation (16/18)
+    
+    One benefit of setting up crypttab via kdump is "kdumpctl setup-crypttab" will
+    continue only the dumping target is truly encrypted and the logic to
+    detect encrypted dumping target is already there.
+    
+    After all architectures supports encrypted dump target, the current
+    implementing of detecting if any volume has been encrypted which may not
+    necessary be a dump target can be dropped.
+    
+    Assisted-by: Claude Code
+    Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+
+Signed-off-by: Coiby Xu <coiby.xu@gmail.com>
+
+diff --git a/com_redhat_kdump/service/installation.py b/com_redhat_kdump/service/installation.py
+index aae58c173cc4e879a2ff772417eb17fd8ca29864..9f65a81e50037212559553882de425c91f5fb6f8 100644
+--- a/com_redhat_kdump/service/installation.py
++++ b/com_redhat_kdump/service/installation.py
+@@ -29,7 +29,7 @@ from com_redhat_kdump.common import getLuksDevices
+ 
+ log = logging.getLogger(__name__)
+ 
+-__all__ = ["KdumpBootloaderConfigurationTask", "KdumpInstallationTask"]
++__all__ = ["KdumpBootloaderConfigurationTask", "KdumpInstallationTask", "KdumpCrypttabSetupTask"]
+ 
+ 
+ class KdumpBootloaderConfigurationTask(Task):
+@@ -156,3 +156,40 @@ class KdumpInstallationTask(Task):
+             [systemctl_action, "kdump.service"],
+             root=self._sysroot
+         )
++
++
++class KdumpCrypttabSetupTask(Task):
++    """The task for setting up crypttab for kdump."""
++
++    def __init__(self, sysroot):
++        """Create a task."""
++        super().__init__()
++        self._sysroot = sysroot
++
++    @property
++    def name(self):
++        return "Setup crypttab for kdump"
++
++    def _has_setup_crypttab_command(self):
++        """Check if kdumpctl has setup-crypttab subcommand by checking help output."""
++        try:
++            help_output = util.execWithCapture("kdumpctl", ["help"], root=self._sysroot)
++            return "setup-crypttab" in help_output
++        except FileNotFoundError:
++            log.debug("kdumpctl command not found")
++            return False
++        except Exception as e:
++            log.warning("Failed to check kdumpctl help: %s", e)
++            return False
++
++    def run(self):
++        """Run the task."""
++        if not self._has_setup_crypttab_command():
++            log.debug("kdumpctl setup-crypttab command not available, skipping")
++            return
++
++        try:
++            util.execWithRedirect("kdumpctl", ["setup-crypttab"], root=self._sysroot)
++            log.debug("Successfully executed kdumpctl setup-crypttab")
++        except Exception as e:
++            log.warning("Failed to execute kdumpctl setup-crypttab: %s", e)
+diff --git a/com_redhat_kdump/service/kdump.py b/com_redhat_kdump/service/kdump.py
+index 8356d193e58000b35cb807e75862f34f1d845ffb..cecbfc3ec6ae34ab9602809091398b3f64917589 100755
+--- a/com_redhat_kdump/service/kdump.py
++++ b/com_redhat_kdump/service/kdump.py
+@@ -26,7 +26,7 @@ from pyanaconda.modules.common.structures.requirement import Requirement
+ 
+ from com_redhat_kdump.common import getMemoryBounds
+ from com_redhat_kdump.constants import KDUMP
+-from com_redhat_kdump.service.installation import KdumpBootloaderConfigurationTask, KdumpInstallationTask
++from com_redhat_kdump.service.installation import KdumpBootloaderConfigurationTask, KdumpInstallationTask, KdumpCrypttabSetupTask
+ from com_redhat_kdump.service.kdump_interface import KdumpInterface
+ from com_redhat_kdump.service.kickstart import KdumpKickstartSpecification
+ 
+@@ -137,13 +137,22 @@ class KdumpService(KickstartService):
+ 
+         :return: a list of tasks
+         """
+-        return [
++        tasks = [
+             KdumpInstallationTask(
+                 sysroot=conf.target.system_root,
+                 kdump_enabled=self.kdump_enabled,
+             )
+         ]
+ 
++        if self.kdump_enabled:
++            tasks.append(
++                KdumpCrypttabSetupTask(
++                    sysroot=conf.target.system_root
++                )
++            )
++
++        return tasks
++
+     def configure_bootloader_with_tasks(self, kernels):
+         return [
+             KdumpBootloaderConfigurationTask(
+diff --git a/test/unit_tests/test_installation.py b/test/unit_tests/test_installation.py
+index e0d4109ad2fd9996c62a7c746e558fc09f1f5315..8bff6059db4a5ba926cbd70f8df852ec854aaf34 100644
+--- a/test/unit_tests/test_installation.py
++++ b/test/unit_tests/test_installation.py
+@@ -1,7 +1,7 @@
+ from unittest.case import TestCase
+ from unittest.mock import patch
+ from com_redhat_kdump.constants import FADUMP_CAPABLE_FILE
+-from com_redhat_kdump.service.installation import KdumpBootloaderConfigurationTask, KdumpInstallationTask
++from com_redhat_kdump.service.installation import KdumpBootloaderConfigurationTask, KdumpInstallationTask, KdumpCrypttabSetupTask
+ 
+ SYSROOT = "/sysroot"
+ 
+@@ -220,3 +220,55 @@ class KdumpInstallationTestCase(TestCase):
+         )
+         task.run()
+         mock_util.execWithRedirect.assert_not_called()
++
++    @patch("pyanaconda.core.util.execWithCapture")
++    def test_crypttab_setup_check_help_with_setup_crypttab(self, mock_exec):
++        mock_exec.return_value = "setup-crypttab   Setup crypttab for kdump"
++        task = KdumpCrypttabSetupTask(sysroot="/mnt/sysroot")
++        result = task._has_setup_crypttab_command()
++        mock_exec.assert_called_once_with("kdumpctl", ["help"], root="/mnt/sysroot")
++        assert result is True
++
++    @patch("pyanaconda.core.util.execWithCapture")
++    def test_crypttab_setup_check_help_without_setup_crypttab(self, mock_exec):
++        mock_exec.return_value = "start   Start kdump\nstop    Stop kdump"
++        task = KdumpCrypttabSetupTask(sysroot="/mnt/sysroot")
++        result = task._has_setup_crypttab_command()
++        mock_exec.assert_called_once_with("kdumpctl", ["help"], root="/mnt/sysroot")
++        assert result is False
++
++    @patch("pyanaconda.core.util.execWithCapture")
++    def test_crypttab_setup_check_help_kdumpctl_not_found(self, mock_exec):
++        mock_exec.side_effect = FileNotFoundError()
++        task = KdumpCrypttabSetupTask(sysroot="/mnt/sysroot")
++        result = task._has_setup_crypttab_command()
++        mock_exec.assert_called_once_with("kdumpctl", ["help"], root="/mnt/sysroot")
++        assert result is False
++
++    @patch("pyanaconda.core.util.execWithRedirect")
++    @patch("com_redhat_kdump.service.installation.KdumpCrypttabSetupTask._has_setup_crypttab_command")
++    def test_crypttab_setup_run_with_command_available(self, mock_has_command, mock_exec):
++        mock_has_command.return_value = True
++        task = KdumpCrypttabSetupTask(sysroot="/mnt/sysroot")
++        task.run()
++        mock_has_command.assert_called_once()
++        mock_exec.assert_called_once_with("kdumpctl", ["setup-crypttab"], root="/mnt/sysroot")
++
++    @patch("pyanaconda.core.util.execWithRedirect")
++    @patch("com_redhat_kdump.service.installation.KdumpCrypttabSetupTask._has_setup_crypttab_command")
++    def test_crypttab_setup_run_without_command_available(self, mock_has_command, mock_exec):
++        mock_has_command.return_value = False
++        task = KdumpCrypttabSetupTask(sysroot="/mnt/sysroot")
++        task.run()
++        mock_has_command.assert_called_once()
++        mock_exec.assert_not_called()
++
++    @patch("pyanaconda.core.util.execWithRedirect")
++    @patch("com_redhat_kdump.service.installation.KdumpCrypttabSetupTask._has_setup_crypttab_command")
++    def test_crypttab_setup_run_execution_failure(self, mock_has_command, mock_exec):
++        mock_has_command.return_value = True
++        mock_exec.side_effect = Exception("Command failed")
++        task = KdumpCrypttabSetupTask(sysroot="/mnt/sysroot")
++        task.run()
++        mock_has_command.assert_called_once()
++        mock_exec.assert_called_once_with("kdumpctl", ["setup-crypttab"], root="/mnt/sysroot")
