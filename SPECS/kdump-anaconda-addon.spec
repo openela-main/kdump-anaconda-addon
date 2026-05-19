@@ -4,7 +4,7 @@
 
 Name: kdump-anaconda-addon
 Version: 006
-Release: 15.%{snapshotdate}git%{gitshortcommit}%{?dist}
+Release: 16.%{snapshotdate}git%{gitshortcommit}%{?dist}
 Url: https://github.com/daveyoung/kdump-anaconda-addon
 License: GPLv2
 Summary: Kdump configuration anaconda addon
@@ -23,6 +23,9 @@ Patch1: 0001.patch
 Patch2: 0002.patch
 Patch3: 0003.patch
 Patch4: 0004.patch
+Patch5: 0005.patch
+Patch6: 0006.patch
+Patch7: 0007.patch
 
 %description
 Kdump anaconda addon
@@ -46,6 +49,9 @@ Kdump anaconda addon
 %{_datadir}/icons/hicolor/scalable/apps/kdump.svg
 
 %changelog
+* Mon Oct 13 2025 Coiby Xu <coxu@redhat.com> - 006-16.20220128git9603258
+- Feature: Set up crypttab
+
 * Tue Apr 29 2025 Coiby Xu <coxu@redhat.com> - 006-15.20220128git9603258
 - Handle the case where systemd isn't installed (RHEL-86873)
 
